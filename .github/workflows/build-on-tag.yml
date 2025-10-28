@@ -1,0 +1,62 @@
+name: Build and Upload ZIP
+
+on:
+  push:
+    tags:
+      - 'v*'           # runs when you push a tag like v1.2.3
+  workflow_dispatch:    # allow manual run from Actions tab
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+
+    env:
+      # Adjust if your build writes the zip elsewhere or uses a fixed name
+      ARTIFACT_GLOB: "**/*.zip"
+      ARTIFACT_NAME: "build-${{ github.ref_name || github.sha }}"
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          submodules: recursive
+
+      - name: Install build dependencies (APT)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            zstd libzstd-dev \
+            cmake build-essential git pkg-config \
+            libssl-dev zlib1g-dev \
+            libboost-all-dev \
+            rapidjson-dev \
+            libhdf5-dev libhdf5-serial-dev libhdf5-cpp-103-1t64 hdf5-tools \
+            texinfo \
+            python3-setuptools python3-pip python3-wheel cython3 \
+            liblzma-dev libbz2-dev
+          sudo rm -rf /var/lib/apt/lists/*
+
+      - name: Build
+        run: |
+          mkdir release
+          cd release
+          cmake .. -DCMAKE_BUILD_TYPE=Release
+          make package 
+
+      - name: Verify ZIP exists
+        run: |
+          shopt -s nullglob globstar
+          files=( ${{ env.ARTIFACT_GLOB }} )
+          if [ ${#files[@]} -eq 0 ]; then
+            echo "No ZIP files found matching: ${{ env.ARTIFACT_GLOB }}"
+            exit 1
+          fi
+          printf 'Found ZIP(s):\n%s\n' "${files[@]}"
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.ARTIFACT_NAME }}
+          path: ${{ env.ARTIFACT_GLOB }}
+          if-no-files-found: error
