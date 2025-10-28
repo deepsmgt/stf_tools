@@ -36,7 +36,12 @@ jobs:
             python3-setuptools python3-pip python3-wheel cython3 \
             liblzma-dev libbz2-dev
           sudo rm -rf /var/lib/apt/lists/*
-
+          
+      - name: Configure Git identity
+        run: |
+          git config --global user.email "github-actions@github.com"
+          git config --global user.name "GitHub Actions"
+          
       - name: Build
         run: |
           mkdir release
