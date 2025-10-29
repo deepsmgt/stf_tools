@@ -12,8 +12,8 @@ jobs:
 
     env:
       # Adjust if your build writes the zip elsewhere or uses a fixed name
-      ARTIFACT_GLOB: "**/*.zip"
-      ARTIFACT_NAME: "build-${{ github.ref_name || github.sha }}"
+      ARTIFACT_GLOB: "release/package/stf*.zip"
+      ARTIFACT_NAME: "stf-tools-${{ github.ref_name || github.sha }}"
 
     steps:
       - name: Checkout
