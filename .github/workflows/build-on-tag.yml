@@ -47,7 +47,8 @@ jobs:
       - name: Rewrite GitHub SSH URLs to HTTPS
         run: |
           git config --global url."https://github.com/".insteadOf "git@github.com:"
-          git config --global url."https://github.com/".insteadOf "ssh://git@github.com/"
+          git config --global --add url."https://github.com/".insteadOf "ssh://git@github.com/"
+          git submodule foreach --recursive 'git config remote.origin.url $(git config remote.origin.url | sed "s|git@github.com:|https://github.com/|g")'
           git submodule sync --recursive
           git submodule update --init --recursive --jobs 8
            
